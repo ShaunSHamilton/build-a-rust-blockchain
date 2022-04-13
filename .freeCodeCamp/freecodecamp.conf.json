@@ -1,7 +1,7 @@
 {
   "path": ".freeCodeCamp",
   "scripts": {
-    "develop-course": "cp sample.env .env && source ./tooling/.bashrc && npm ci && npm run develop",
+    "develop-course": "npm ci && npm run develop",
     "run-course": "npm run start",
     "test": {
       "functionName": "handleMessage",

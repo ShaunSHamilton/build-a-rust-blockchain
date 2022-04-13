@@ -7,10 +7,7 @@ import IntegratedProject from "./templates/integrated-project";
 import { Events, TestType } from "./types/index";
 import { parseMarkdown } from "./utils";
 
-let INTEGRATED_PROJECT = false;
-// try {
-//   INTEGRATED_PROJECT = !!process?.env?.INTEGRATED_PROJECT;
-// } catch (e) {}
+let INTEGRATED_PROJECT = true;
 
 const socket = new WebSocket("ws://localhost:8080");
 const App = () => {
