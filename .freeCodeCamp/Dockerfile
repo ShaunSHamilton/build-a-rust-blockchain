@@ -26,6 +26,14 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> \
 # Install packages for projects
 RUN sudo apt-get install -y curl git bash-completion man-db
 
+## Rust
+RUN sudo apt-get install build-essential
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install wasm-pack for global use
+RUN cargo install wasm-pack
+
 # Install Node LTS
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 RUN sudo apt-get install -y nodejs
@@ -43,11 +51,6 @@ WORKDIR ${HOMEDIR}
 
 
 # Other Tools
-
-## Rust
-# RUN sudo apt-get install build-essential
-# RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-# ENV PATH="/root/.cargo/bin:${PATH}"
 
 ## Python
 
