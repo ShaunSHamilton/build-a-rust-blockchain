@@ -4,9 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    block::Block, calculate_hash, generate_new_address, hash_to_binary, DIFFICULTY_PREFIX,
-};
+use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Node {
@@ -24,9 +22,7 @@ impl Node {
     /// let node = Node::new();
     /// assert_eq!(node.address, "Camper");
     /// ```
-    pub fn new() -> Self {
-        // TODO: create a new random address
-        let address = generate_new_address();
+    pub fn new(address: String) -> Self {
         Self {
             address,
             staked: 0,
@@ -95,11 +91,14 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
+    use crate::generate_new_address;
+
     use super::*;
     #[test]
     fn new_always_creates_same_node() {
-        let node1 = Node::new();
-        let node2 = Node::new();
+        let address = generate_new_address();
+        let node1 = Node::new(address.clone());
+        let node2 = Node::new(address);
         assert_eq!(node1.address, node2.address);
         assert_eq!(node1.staked, node2.staked);
         assert_eq!(node1.tokens, node2.tokens);

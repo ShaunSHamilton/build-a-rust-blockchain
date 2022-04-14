@@ -96,23 +96,23 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
                     if node.can_unstake() {
                         node.staked -= 1;
                     } else {
-                        errors.push(format!("{} cannot unstake", node.address));
+                        errors.push(format!("'{}' cannot unstake", node.address));
                     }
                 }
                 Events::Stake => {
                     if node.can_stake() {
                         node.staked += 1;
                     } else {
-                        errors.push(format!("{} cannot stake", node.address));
+                        errors.push(format!("'{}' cannot stake", node.address));
                     }
                 }
                 Events::AddAccount => {
                     // Add node to chain
-                    unique_nodes_final.push(Node::new());
+                    unique_nodes_final.push(Node::new(transaction.address.clone()));
                 }
                 Events::Transfer(to, amount) => {
                     if &node.address == to {
-                        errors.push(format!("{} cannot transfer to itself", node.address));
+                        errors.push(format!("'{}' cannot transfer to itself", node.address));
                     } else {
                         if node.can_transfer(&amount) {
                             // Check if recipient is in `unique_nodes`
@@ -228,7 +228,7 @@ pub fn initialise() -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
 
     // Create and mine genesis block
-    let genesis_node = Node::new();
+    let genesis_node = Node::new(generate_new_address());
     let genesis_address = genesis_node.address.clone();
     let data = vec![genesis_node];
     let network = vec![genesis_address];
@@ -288,7 +288,7 @@ mod tests {
     }
     #[test]
     fn calculate_hash_works() {
-        let data = vec![Node::new()];
+        let data = vec![Node::new(generate_new_address())];
         let hash = calculate_hash(
             &data,
             1,
@@ -313,33 +313,4 @@ mod tests {
         let address2 = generate_new_address();
         assert_ne!(address1, address2);
     }
-    #[test]
-    fn tes() {
-        let hash = experi();
-        assert_eq!(hash, "Ok".to_string(),);
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-enum Es {
-    A,
-    B(String, u64),
-}
-
-#[derive(Serialize, Deserialize)]
-struct StructEnum {
-    a: String,
-    b: Es,
-}
-
-#[wasm_bindgen]
-pub fn experi() -> JsValue {
-    let rs_eq = StructEnum {
-        a: "Shaun".to_string(),
-        b: Es::B("Works?".to_string(), 24),
-    };
-    let rs_ser = serde_json::to_string(&rs_eq).unwrap();
-    let rust_equiv: JsValue = JsValue::from_serde(&rs_ser).unwrap();
-    println!("{:?}", rust_equiv);
-    rust_equiv
 }

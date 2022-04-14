@@ -13,33 +13,115 @@ use web_sys::{console, ErrorEvent};
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
-fn stake() {
+fn staking_increases_account_staked_by_1() {
     let mut fix_node_state = fix(None);
     fix_node_state.transactions[0].event = Events::Stake;
-    fix_node_state.transactions[0].address = "Camper".to_string();
 
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
-    assert_eq!(chain.get_last_block().unwrap().data[0].staked, 1);
+    assert_eq!(
+        chain.get_last_block().unwrap().data[0].staked,
+        1,
+        "Stake should increase by 1"
+    );
+    assert_eq!(
+        chain.get_last_block().unwrap().data[0].tokens,
+        1,
+        "Tokens should not change"
+    );
 }
 
 #[wasm_bindgen_test]
-fn unstake() {
+fn staking_with_no_tokens_returns_error() {
+    let mut fix_node_state = fix(None);
+    fix_node_state.chain[0].data[0].tokens = 0;
+    fix_node_state.transactions[0].event = Events::Stake;
+    fix_node_state.transactions.push(Transaction {
+        event: Events::Stake,
+        address: "Tom".to_string(),
+    });
+
+    let (chain, errors) = mine(fix_node_state).expect("result to be chain");
+
+    assert_eq!(
+        chain.get_node_by_address("Camper").unwrap().staked,
+        0,
+        "Stake should not change, if the transaction fails"
+    );
+    assert_eq!(
+        chain.get_node_by_address("Camper").unwrap().tokens,
+        0,
+        "Tokens should not change"
+    );
+    assert_eq!(
+        errors[0], "'Camper' cannot stake",
+        "An error should be returned describing the failed transaction"
+    );
+}
+
+#[wasm_bindgen_test]
+fn staking_when_staked_equals_tokens_returns_error() {
+    let mut fix_node_state = fix(None);
+    fix_node_state.chain[0].data[0].tokens = 19;
+    fix_node_state.chain[0].data[0].staked = 19;
+    fix_node_state.transactions[0].event = Events::Stake;
+    fix_node_state.transactions.push(Transaction {
+        event: Events::Stake,
+        address: "Tom".to_string(),
+    });
+
+    let (chain, errors) = mine(fix_node_state).expect("result to be chain");
+
+    assert_eq!(
+        chain.get_node_by_address("Camper").unwrap().staked,
+        19,
+        "Stake should not change, if the transaction fails"
+    );
+    assert_eq!(
+        chain.get_node_by_address("Camper").unwrap().tokens,
+        19,
+        "Tokens should not change"
+    );
+    assert_eq!(
+        errors[0], "'Camper' cannot stake",
+        "An error should be returned describing the failed transaction"
+    );
+}
+
+#[wasm_bindgen_test]
+fn unstaking_decreases_account_staked_by_1() {
     let mut fix_node_state = fix(None);
     fix_node_state.chain[0].data[0].staked = 1;
     fix_node_state.transactions[0].event = Events::Unstake;
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
-    assert_eq!(chain.get_last_block().unwrap().data[0].staked, 0);
+    assert_eq!(
+        chain.get_last_block().unwrap().data[0].staked,
+        0,
+        "Stake should decrease by 1"
+    );
+    assert_eq!(
+        chain.get_last_block().unwrap().data[0].tokens,
+        1,
+        "Tokens should not change"
+    );
 }
 
 #[wasm_bindgen_test]
-fn add_account() {
+fn add_account_adds_account() {
     let mut fix_node_state = fix(None);
     fix_node_state.transactions[0].event = Events::AddAccount;
-    fix_node_state.transactions[0].address = "Camper".to_string();
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     let new_address = chain.get_last_block().unwrap().data[0].address.clone();
     assert!(chain.get_node_by_address(&new_address).is_some());
-    assert_eq!(chain.get_nodes().len(), 3);
+    assert_eq!(
+        chain.get_nodes().len(),
+        3,
+        "One more account should be added"
+    );
+    assert_eq!(
+        chain.get_nodes()[2].address,
+        new_address,
+        "The new account should have d"
+    );
 }
 
 #[wasm_bindgen_test]

@@ -241,6 +241,8 @@ pub trait ChainTrait {
 
 #[cfg(test)]
 mod tests {
+    use crate::generate_new_address;
+
     use super::*;
     #[test]
     fn new_chain_returns_empty_vec() {
@@ -314,22 +316,23 @@ mod tests {
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
         let network = vec![String::from("node_1"), String::from("node_2")];
-        chain.mine_block(vec![Node::new()], network);
+        chain.mine_block(vec![Node::new(generate_new_address())], network);
         assert_eq!(chain.len(), 3);
     }
 
-    fn _fixture_chain<'a>() -> Chain {
+    fn _fixture_chain() -> Chain {
         let mut chain = Chain::new();
-        let mut camper = Node::new();
+
+        let mut camper = Node::new("Camper".to_string());
         camper.tokens = 10;
         camper.staked = 5;
-        let mut tom = Node::new();
+        let mut tom = Node::new("Tom".to_string());
         tom.tokens = 20;
         tom.staked = 10;
-        let mut mrugesh = Node::new();
+        let mut mrugesh = Node::new("Mrugesh".to_string());
         mrugesh.tokens = 100;
         mrugesh.staked = 80;
-        let mut ahmad = Node::new();
+        let mut ahmad = Node::new("Ahmad".to_string());
         ahmad.tokens = 30;
         ahmad.staked = 22;
 
