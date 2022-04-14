@@ -38,12 +38,15 @@ type Block = {
 }
 
 enum Event = {
-  AddAccount
-  Punish,
-  Reward,
-  Stake,
-  Transfer,
-  Unstake,
+  AddAccount = "AddAccount",
+  Punish = "Punish",
+  Reward= "Reward",
+  Stake = "Stake",
+  Unstake = "Unstake",
+}
+
+type Transfer = {
+  Transfer: [string, number]
 }
 
 type NodeState = {
@@ -54,7 +57,7 @@ type NodeState = {
 
 type Transaction = {
   address: Account['address'];
-  event: Event;
+  event: Event | Transfer;
 }
 ```
 

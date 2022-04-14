@@ -334,15 +334,13 @@ mod tests {
         ahmad.staked = 22;
 
         let data = vec![camper, tom, mrugesh];
+        let mut network: Vec<String> = data.iter().map(|node| node.address.clone()).collect();
 
-        let mut network = vec![
-            String::from("Camper"),
-            String::from("Tom"),
-            String::from("Mrugesh"),
-        ];
-        chain.mine_block(data, network);
+        chain.mine_block(data, network.clone());
+
+        network.push(ahmad.address.clone());
         let data = vec![ahmad];
-        network.push(String::from("Ahmad"));
+
         chain.mine_block(data, network);
         chain
     }

@@ -27,7 +27,7 @@ pub enum Events {
     Punish,
     Reward,
     Stake,
-    Transfer,
+    Transfer(String, u64),
     Unstake,
 }
 
@@ -265,4 +265,33 @@ mod tests {
         let address2 = generate_new_address();
         assert_ne!(address1, address2);
     }
+    #[test]
+    fn tes() {
+        let hash = experi();
+        assert_eq!(hash, "Ok".to_string(),);
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+enum Es {
+    A,
+    B(String, u64),
+}
+
+#[derive(Serialize, Deserialize)]
+struct StructEnum {
+    a: String,
+    b: Es,
+}
+
+#[wasm_bindgen]
+pub fn experi() -> JsValue {
+    let rs_eq = StructEnum {
+        a: "Shaun".to_string(),
+        b: Es::B("Works?".to_string(), 24),
+    };
+    let rs_ser = serde_json::to_string(&rs_eq).unwrap();
+    let rust_equiv: JsValue = JsValue::from_serde(&rs_ser).unwrap();
+    println!("{:?}", rust_equiv);
+    rust_equiv
 }
