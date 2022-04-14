@@ -71,22 +71,27 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
     let mut chain = node_state.chain;
     let mut errors: Vec<String> = vec![];
 
-    let mut unique_nodes: Vec<Node> = vec![];
+    let mut unique_nodes_before: Vec<Node> = vec![];
     for transaction in node_state.transactions.iter() {
         if let Some(node) = chain.get_node_by_address(&transaction.address) {
-            if !unique_nodes.iter().any(|n| n.address == node.address) {
+            if !unique_nodes_before
+                .iter()
+                .any(|n| n.address == node.address)
+            {
                 let node = node.clone();
-                unique_nodes.push(node);
+                unique_nodes_before.push(node);
             }
         }
     }
 
+    let mut unique_nodes_final = unique_nodes_before.clone();
+
     for transaction in node_state.transactions.iter() {
-        if let Some(node) = unique_nodes
+        if let Some(node) = unique_nodes_before
             .iter_mut()
             .find(|n| n.address == transaction.address)
         {
-            match transaction.event {
+            match &transaction.event {
                 Events::Unstake => {
                     if node.can_unstake() {
                         node.staked -= 1;
@@ -103,21 +108,26 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
                 }
                 Events::AddAccount => {
                     // Add node to chain
-                    unique_nodes.push(Node::new());
+                    unique_nodes_final.push(Node::new());
                 }
                 Events::Transfer(to, amount) => {
-                    if node.address == to {
+                    if &node.address == to {
                         errors.push(format!("{} cannot transfer to itself", node.address));
                     } else {
                         if node.can_transfer(&amount) {
                             // Check if recipient is in `unique_nodes`
                             // Else, check if recipient is in `chain`
-                            if let Some(recipient) = unique_nodes.iter().find(|n| n.address == to) {
+                            if let Some(recipient) =
+                                unique_nodes_final.iter_mut().find(|n| &n.address == to)
+                            {
                                 recipient.tokens += amount;
                                 node.tokens -= amount;
                             } else {
                                 if let Some(recipient) = chain.get_node_by_address(&to) {
-                                    unique_nodes.push(recipient.clone());
+                                    let mut to_node = recipient.clone();
+                                    to_node.tokens += amount;
+                                    unique_nodes_final.push(to_node);
+                                    node.tokens -= amount;
                                 } else {
                                     errors.push(format!("Recipient '{}' not found in chain", to));
                                 }
@@ -146,10 +156,20 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
         }
     }
 
-    if errors.len() == node_state.transactions.len() || unique_nodes.len() == 0 {
+    // Update `unique_nodes_final` with `unique_nodes_before`
+    for node in unique_nodes_before.iter() {
+        if let Some(index) = unique_nodes_final
+            .iter()
+            .position(|n| n.address == node.address)
+        {
+            unique_nodes_final[index] = node.clone();
+        }
+    }
+
+    if errors.len() == node_state.transactions.len() || unique_nodes_final.len() == 0 {
         return Err(JsError::new("Invalid transactions. No change in chain"));
     }
-    chain.mine_block(unique_nodes, node_state.network);
+    chain.mine_block(unique_nodes_final, node_state.network);
     // let response = Res { chain, errors };
     Ok(JsValue::from_serde(&(chain, errors))?)
 }
