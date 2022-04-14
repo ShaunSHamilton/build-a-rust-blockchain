@@ -63,7 +63,6 @@ type Transaction = {
 - Your blockchain uses Proof of Stake consensus
 - Your blockchain uses `wasm-pack` to compile the Rust code to JavaScript for Nodejs
 - Your blockchain exports an `initialise_chain` function that returns `Result<JsValue, JsError>`
-  - This function accepts a `String` with the address of the initialising node
 - Your blockchain exports a `mine_block` function that returns `Result<JsValue, JsError>`
   - This function accepts a `JsValue` with the `NodeState` type
 - Your blockchain exports a `validate_block` function that returns `Result<bool, JsError>`
@@ -72,17 +71,12 @@ type Transaction = {
 
 ### --tests--
 
-You should create a new Rust library named `blockchain`.
-
-```js
-await new Promise((resolve) => setTimeout(resolve, 1564));
-assert(true);
-```
-
 Your `blockchain` library should pass all unit tests.
 
 ```js
 // Execute `cargo test --lib`, and pipe output to tests client
+await new Promise((resolve) => setTimeout(resolve, 1564));
+assert(true);
 ```
 
 Your `blockchain` library should pass all integration tests.
