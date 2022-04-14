@@ -14,8 +14,11 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
 fn stake() {
-    let data = vec![Node::new()];
-    let address = data[0].address.clone();
+    let mut camper = Node::new();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
+    let data = vec![camper];
+
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Stake;
     fix_node_state.transactions[0].address = address;
@@ -27,6 +30,8 @@ fn stake() {
 #[wasm_bindgen_test]
 fn unstake() {
     let mut camper = Node::new();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
     camper.staked = 1;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
@@ -38,12 +43,13 @@ fn unstake() {
 #[wasm_bindgen_test]
 fn add_account() {
     let mut camper = Node::new();
-    let camper_address = camper.address.clone();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
     camper.staked = 1;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::AddAccount;
-    fix_node_state.transactions[0].address = camper_address;
+    fix_node_state.transactions[0].address = address;
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     let new_address = chain.get_last_block().unwrap().data[0].address.clone();
     assert!(chain.get_node_by_address(&new_address).is_some());
@@ -53,10 +59,13 @@ fn add_account() {
 #[wasm_bindgen_test]
 fn all_invalid_unstake() {
     let mut camper = Node::new();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
     camper.staked = 0;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Unstake;
+    fix_node_state.transactions[0].address = address;
     let chain_res = mine(fix_node_state);
     assert!(chain_res.is_err());
     if let Err(e) = chain_res {
@@ -72,10 +81,13 @@ fn all_invalid_unstake() {
 #[wasm_bindgen_test]
 fn all_invalid_stake() {
     let mut camper = Node::new();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
     camper.staked = 20;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Stake;
+    fix_node_state.transactions[0].address = address;
     let chain_res = mine(fix_node_state);
     assert!(chain_res.is_err());
     if let Err(e) = chain_res {
@@ -91,12 +103,13 @@ fn all_invalid_stake() {
 #[wasm_bindgen_test]
 fn all_invalid_find_node() {
     let mut camper = Node::new();
-    let camper_address = camper.address.clone();
+    let address = "Camper".to_string();
+    camper.address = address.clone();
     camper.staked = 1;
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions[0].event = Events::Stake;
-    fix_node_state.transactions[0].address = camper_address;
+    fix_node_state.transactions[0].address = address;
     let chain_res = mine(fix_node_state);
     console::log_1(&format!("{:?}", chain_res).into());
     assert!(chain_res.is_err());
@@ -112,7 +125,8 @@ fn all_invalid_find_node() {
 
 #[wasm_bindgen_test]
 fn stake_multiple_tokens() {
-    let camper = Node::new();
+    let mut camper = Node::new();
+    camper.address = "Camper".to_string();
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions.push(Transaction {
@@ -129,7 +143,8 @@ fn stake_multiple_tokens() {
 
 #[wasm_bindgen_test]
 fn one_invalid_transaction() {
-    let camper = Node::new();
+    let mut camper = Node::new();
+    camper.address = "Camper".to_string();
     let data = vec![camper];
     let mut fix_node_state = fix(data);
     fix_node_state.transactions.push(Transaction {
@@ -149,28 +164,25 @@ fn fix(data: Vec<Node>) -> NodeState {
     let node_vec_str = serde_json::to_string(&data).unwrap();
     let fix_node_state = format!(
         r#"{{
-      "chain": {{
-        "chain": [
-          {{
-            "id": 0,
-            "hash": "00110101",
-            "previous_hash": "",
-            "timestamp": 123456789,
-            "data": {},
-            "nonce": 123,
-            "next_miner": "Camper",
-            "next_validators": ["Camper"]
-          }}
-        ],
-        "network": ["Camper"]
-      }},
-      "transactions": [
+      "chain": [
         {{
-          "event": "SubmitTask",
-          "name": "Camper"
+          "id": 0,
+          "hash": "00110101",
+          "previous_hash": "",
+          "timestamp": 123456789,
+          "data": {},
+          "nonce": 123,
+          "next_miner": "Camper",
+          "next_validators": ["Camper"]
         }}
       ],
-      "task_valid": true
+      "transactions": [
+        {{
+          "address": "Camper",
+          "event": {{"Transfer": ["Tom", 1]}}
+        }}
+      ],
+      "network": ["Camper"]
     }}"#,
         node_vec_str
     );

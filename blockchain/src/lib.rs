@@ -101,18 +101,46 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
                         errors.push(format!("{} cannot stake", node.address));
                     }
                 }
-                _ => {
-                    errors.push(format!("{} transacted with an invalid event", node.address));
-                }
-            };
-        } else {
-            match transaction.event {
                 Events::AddAccount => {
                     // Add node to chain
                     unique_nodes.push(Node::new());
                 }
+                Events::Transfer(to, amount) => {
+                    if node.address == to {
+                        errors.push(format!("{} cannot transfer to itself", node.address));
+                    } else {
+                        if node.can_transfer(&amount) {
+                            // Check if recipient is in `unique_nodes`
+                            // Else, check if recipient is in `chain`
+                            if let Some(recipient) = unique_nodes.iter().find(|n| n.address == to) {
+                                recipient.tokens += amount;
+                                node.tokens -= amount;
+                            } else {
+                                if let Some(recipient) = chain.get_node_by_address(&to) {
+                                    unique_nodes.push(recipient.clone());
+                                } else {
+                                    errors.push(format!("Recipient '{}' not found in chain", to));
+                                }
+                            }
+                        } else {
+                            errors.push(format!(
+                                "'{}' cannot transfer {} tokens",
+                                node.address, amount
+                            ));
+                        }
+                    }
+                }
                 _ => {
-                    errors.push(format!("{} not found in chain", transaction.address));
+                    errors.push(format!(
+                        "'{}' transacted with an invalid event",
+                        node.address
+                    ));
+                }
+            };
+        } else {
+            match transaction.event {
+                _ => {
+                    errors.push(format!("'{}' not found in chain", transaction.address));
                 }
             };
         }

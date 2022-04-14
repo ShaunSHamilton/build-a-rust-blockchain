@@ -46,6 +46,9 @@ impl Node {
     pub fn can_unstake(&self) -> bool {
         self.staked > 0
     }
+    pub fn can_transfer(&self, amount: &u64) -> bool {
+        self.tokens >= *amount
+    }
     /// Check if a Node can be punished, by checking if it has any tokens and reputation
     pub fn can_punish(&self) -> bool {
         self.tokens > 0
