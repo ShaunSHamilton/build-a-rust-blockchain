@@ -72,11 +72,23 @@ type Transaction = {
 
 ### --tests--
 
-First test
+You should create a new Rust library named `blockchain`.
 
 ```js
 await new Promise((resolve) => setTimeout(resolve, 1564));
 assert(true);
+```
+
+Your `blockchain` library should pass all unit tests.
+
+```js
+// Execute `cargo test --lib`, and pipe output to tests client
+```
+
+Your `blockchain` library should pass all integration tests.
+
+```js
+// Execute `wasm-pack test --chrome`, and pipe output to tests client
 ```
 
 ## 2
