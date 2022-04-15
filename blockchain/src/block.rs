@@ -20,3 +20,22 @@ pub struct Block {
     pub next_miner: String,
     pub next_validators: Vec<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn block_has_correct_fields() {
+        // This test must just not panic.
+        let _block = Block {
+            id: 0u64,
+            hash: "example".to_string(),
+            previous_hash: "example".to_string(),
+            timestamp: 0u64,
+            data: vec![],
+            nonce: 0u64,
+            next_miner: "Example".to_string(),
+            next_validators: vec![String::from("Example")],
+        };
+    }
+}

@@ -91,12 +91,10 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::generate_new_address;
-
     use super::*;
     #[test]
     fn new_always_creates_same_node() {
-        let address = generate_new_address();
+        let address = "example".to_string();
         let node1 = Node::new(address.clone());
         let node2 = Node::new(address);
         assert_eq!(node1.address, node2.address);
@@ -151,7 +149,7 @@ mod tests {
     #[test]
     fn all_staked_miner_weight() {
         let node = _fixture_nodes().0;
-        assert_eq!(node.weight_as_miner(), 800);
+        assert_eq!(node.weight_as_miner(), 100);
     }
     #[test]
     fn all_unstaked_miner_weight() {
@@ -166,17 +164,17 @@ mod tests {
     #[test]
     fn all_staked_validator_weight() {
         let node = _fixture_nodes().0;
-        assert_eq!(node.weight_as_validator(), 8);
+        assert_eq!(node.weight_as_validator(), 100);
     }
     #[test]
     fn all_unstaked_validator_weight() {
         let node = _fixture_nodes().1;
-        assert_eq!(node.weight_as_validator(), 8);
+        assert_eq!(node.weight_as_validator(), 0);
     }
     #[test]
     fn no_tokens_validator_weight() {
         let node = _fixture_nodes().2;
-        assert_eq!(node.weight_as_validator(), 1);
+        assert_eq!(node.weight_as_validator(), 0);
     }
     #[test]
     fn invalidate_block_unequal_previous_hash() {
@@ -210,6 +208,7 @@ mod tests {
     fn validate_block_correct() {
         let previous_block = _fixture_blocks().0;
         let block = _fixture_blocks().1;
+
         assert!(Node::validate_block(&block, &previous_block));
     }
 

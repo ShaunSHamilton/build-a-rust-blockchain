@@ -12,7 +12,6 @@ use node::Node;
 
 use crate::chain::ChainTrait;
 
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
@@ -106,10 +105,6 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
                         errors.push(format!("'{}' cannot stake", node.address));
                     }
                 }
-                Events::AddAccount => {
-                    // Add node to chain
-                    unique_nodes_final.push(Node::new(transaction.address.clone()));
-                }
                 Events::Transfer(to, amount) => {
                     if &node.address == to {
                         errors.push(format!("'{}' cannot transfer to itself", node.address));
@@ -149,6 +144,10 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
             };
         } else {
             match transaction.event {
+                Events::AddAccount => {
+                    // Add node to chain
+                    unique_nodes_final.push(Node::new(transaction.address.clone()));
+                }
                 _ => {
                     errors.push(format!("'{}' not found in chain", transaction.address));
                 }
@@ -210,25 +209,28 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
 #[wasm_bindgen]
 pub fn validate_block(chain: JsValue) -> Result<bool, JsError> {
     let chain: Chain = chain.into_serde()?;
+    if chain.len() < 2 {
+        return Err(JsError::new("Chain is too short"));
+    }
     if let Some(previous_block) = chain.get(chain.len() - 2) {
-        let last_block: Block = match chain.get_last_block() {
-            Some(block) => block,
-            None => return Err(JsError::new("Chain is empty")),
-        };
-        Ok(Node::validate_block(&last_block, previous_block))
+        if let Some(last_block) = chain.get_last_block() {
+            Ok(Node::validate_block(&last_block, previous_block))
+        } else {
+            Err(JsError::new("Unable to get latest block from chain"))
+        }
     } else {
-        Err(JsError::new("Chain is too short"))
+        Err(JsError::new("Unhandled error"))
     }
 }
 
 /// Initialise a new blockchain, and returns the corresponding chain.
 /// This is only to be called by the first Node starting the network.
 #[wasm_bindgen]
-pub fn initialise() -> Result<JsValue, JsError> {
+pub fn initialise(address: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
 
     // Create and mine genesis block
-    let genesis_node = Node::new(generate_new_address());
+    let genesis_node = Node::new(address);
     let genesis_address = genesis_node.address.clone();
     let data = vec![genesis_node];
     let network = vec![genesis_address];
@@ -270,15 +272,6 @@ pub fn calculate_hash(
     hasher.finalize().as_slice().to_owned()
 }
 
-pub fn generate_new_address() -> String {
-    let mut rng = rand::thread_rng();
-    let mut address: String = String::default();
-    for _ in 0..10 {
-        address.push(rng.gen_range(b'a'..b'z') as char);
-    }
-    address
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -307,10 +300,14 @@ mod tests {
         assert_eq!(hash_str.len(), 50);
     }
 
-    #[test]
-    fn generate_new_address_is_sudo_random() {
-        let address1 = generate_new_address();
-        let address2 = generate_new_address();
-        assert_ne!(address1, address2);
+    fn generate_new_address() -> String {
+        use rand::Rng;
+
+        let mut rng = rand::thread_rng();
+        let mut address: String = String::default();
+        for _ in 0..10 {
+            address.push(rng.gen_range(b'a'..b'z') as char);
+        }
+        address
     }
 }

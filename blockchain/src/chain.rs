@@ -10,7 +10,6 @@ use crate::{block::Block, calculate_hash, hash_to_binary, node::Node, DIFFICULTY
 /// The chain consists of the immutable `chain` data.
 pub type Chain = Vec<Block>;
 
-// #[derive(Serialize, Deserialize, Debug, Clone)]
 impl ChainTrait for Chain {
     fn new() -> Self {
         vec![]
@@ -98,14 +97,7 @@ impl ChainTrait for Chain {
             }
             let validator = match nodes.get(ind) {
                 Some(node) => node.address.clone(),
-                None => self
-                    .get(0)
-                    .expect("Chain should contain at least one block")
-                    .data
-                    .get(0)
-                    .expect("Genesis block should contain data")
-                    .address
-                    .clone(),
+                None => network[0].clone(),
             };
             next_validators.push(validator);
         }
@@ -241,8 +233,6 @@ pub trait ChainTrait {
 
 #[cfg(test)]
 mod tests {
-    use crate::generate_new_address;
-
     use super::*;
     #[test]
     fn new_chain_returns_empty_vec() {
@@ -257,10 +247,14 @@ mod tests {
     #[test]
     fn get_last_block_returns_last_block_when_chain_is_not_empty() {
         let chain = _fixture_chain();
-        assert!(chain.get_last_block().is_some());
+        let last_block = chain.get_last_block();
+        assert!(last_block.is_some());
+        let last_block = last_block.unwrap();
+        assert_eq!(last_block.id, 1);
+        assert!(last_block.next_miner.is_ascii());
     }
     #[test]
-    fn get_next_miner_returns_different_miner_when_chain_is_not_empty() {
+    fn get_next_miner_can_return_different_miner_when_chain_is_not_empty() {
         let chain = _fixture_chain();
         // run 100 times, break if miner is different
         let mut i = 0;
@@ -278,7 +272,7 @@ mod tests {
         assert!(a);
     }
     #[test]
-    fn get_next_validators_returns_different_validators_when_chain_is_not_empty() {
+    fn get_next_validators_can_return_different_validators_when_chain_is_not_empty() {
         let chain = _fixture_chain();
         // run 100 times, break if validators are different
         let mut i = 0;
@@ -297,12 +291,12 @@ mod tests {
         assert!(a);
     }
     #[test]
-    fn get_node_by_name_returns_none_when_node_is_not_in_chain() {
+    fn get_node_by_address_returns_none_when_node_is_not_in_chain() {
         let chain = _fixture_chain();
         assert!(chain.get_node_by_address("node_not_in_chain").is_none());
     }
     #[test]
-    fn get_node_by_name_returns_node_when_node_is_in_chain() {
+    fn get_node_by_address_returns_node_when_node_is_in_chain() {
         let chain = _fixture_chain();
         assert!(chain.get_node_by_address("Camper").is_some());
     }
@@ -316,7 +310,7 @@ mod tests {
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
         let network = vec![String::from("node_1"), String::from("node_2")];
-        chain.mine_block(vec![Node::new(generate_new_address())], network);
+        chain.mine_block(vec![Node::new("node_3".to_string())], network);
         assert_eq!(chain.len(), 3);
     }
 

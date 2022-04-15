@@ -19,13 +19,13 @@ fn staking_increases_account_staked_by_1() {
 
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(
-        chain.get_last_block().unwrap().data[0].staked,
+        chain.get_node_by_address("Camper").unwrap().staked,
         1,
         "Stake should increase by 1"
     );
     assert_eq!(
-        chain.get_last_block().unwrap().data[0].tokens,
-        1,
+        chain.get_node_by_address("Camper").unwrap().tokens,
+        20,
         "Tokens should not change"
     );
 }
@@ -94,13 +94,13 @@ fn unstaking_decreases_account_staked_by_1() {
     fix_node_state.transactions[0].event = Events::Unstake;
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(
-        chain.get_last_block().unwrap().data[0].staked,
+        chain.get_node_by_address("Camper").unwrap().staked,
         0,
         "Stake should decrease by 1"
     );
     assert_eq!(
-        chain.get_last_block().unwrap().data[0].tokens,
-        1,
+        chain.get_node_by_address("Camper").unwrap().tokens,
+        20,
         "Tokens should not change"
     );
 }
@@ -109,18 +109,17 @@ fn unstaking_decreases_account_staked_by_1() {
 fn add_account_adds_account() {
     let mut fix_node_state = fix(None);
     fix_node_state.transactions[0].event = Events::AddAccount;
+    let ahmad = String::from("Ahmad");
+    fix_node_state.transactions[0].address = ahmad.clone();
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
-    let new_address = chain.get_last_block().unwrap().data[0].address.clone();
-    assert!(chain.get_node_by_address(&new_address).is_some());
     assert_eq!(
         chain.get_nodes().len(),
         3,
         "One more account should be added"
     );
-    assert_eq!(
-        chain.get_nodes()[2].address,
-        new_address,
-        "The new account should have d"
+    assert!(
+        chain.get_node_by_address(&ahmad).is_some(),
+        "New account should have correct address"
     );
 }
 
