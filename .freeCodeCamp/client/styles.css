@@ -123,3 +123,7 @@ header {
 .hidden {
   display: none;
 }
+
+code {
+  background-color: var(--dark-3);
+}

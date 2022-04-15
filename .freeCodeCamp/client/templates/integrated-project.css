@@ -82,4 +82,5 @@ nav {
   padding: 1rem 2rem;
   margin-top: 0;
   text-align: left;
+  overflow: auto;
 }

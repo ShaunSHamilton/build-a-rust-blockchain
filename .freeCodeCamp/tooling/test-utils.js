@@ -1,6 +1,7 @@
 const fs = require("fs");
 const util = require("util");
 const path = require("path");
+const { join } = require("path");
 const execute = util.promisify(require("child_process").exec);
 
 const ROOT = ".";
@@ -39,11 +40,11 @@ async function getTerminalOutput() {
  * @returns
  */
 async function getCommandOutput(command, path = "") {
-  const { stdout } = await execute(command, {
-    cwd: `${ROOT}/${path}`,
+  const { stdout, stderr } = await execute(command, {
+    cwd: join(process.cwd(), "..", path),
     shell: "/bin/bash",
   });
-  return stdout;
+  return { stdout, stderr };
 }
 
 /**

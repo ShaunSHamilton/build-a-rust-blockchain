@@ -74,18 +74,65 @@ type Transaction = {
 
 ### --tests--
 
-Your `blockchain` library should pass all unit tests.
+Your `blockchain` library should pass all `block::tests` unit tests.
 
 ```js
-// Execute `cargo test --lib`, and pipe output to tests client
-await new Promise((resolve) => setTimeout(resolve, 1564));
-assert(true);
+const { stdout } = await __helpers.getCommandOutput(
+  "cargo test --lib block::tests",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
 ```
 
-Your `blockchain` library should pass all integration tests.
+Your `blockchain` library should pass all `chain::tests` unit tests.
 
 ```js
-// Execute `wasm-pack test --chrome`, and pipe output to tests client
+const { stdout } = await __helpers.getCommandOutput(
+  "cargo test --lib chain::tests",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
+```
+
+Your `blockchain` library should pass all `node::tests` unit tests.
+
+```js
+const { stdout } = await __helpers.getCommandOutput(
+  "cargo test --lib node::tests",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
+```
+
+Your `blockchain` library should pass all `lib::tests` unit tests.
+
+```js
+const { stdout } = await __helpers.getCommandOutput(
+  "cargo test --lib lib::tests",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
+```
+
+Your `blockchain` library should pass all `mine_block` integration tests.
+
+```js
+// Execute `wasm-pack test --firefox --headless -- --test mine_block`, and pipe output to tests client
+const { stdout } = await __helpers.getCommandOutput(
+  "wasm-pack test --firefox --headless -- --test mine_block",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
+```
+
+Your `blockchain` library should pass all `validate_block` integration tests.
+
+```js
+const { stdout } = await __helpers.getCommandOutput(
+  "wasm-pack test --firefox --headless -- --test validate_block",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
 ```
 
 ## 2
