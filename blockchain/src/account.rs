@@ -2,77 +2,10 @@
 //!
 //! An account is a piece of data that is stored in a `BLock` on the blockchain.
 
-use serde::{Deserialize, Serialize};
-
-use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
-
 /// TODO: Complete the struct definition. Be sure to derive the necessary implementations.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Account {
-    pub address: String,
-    pub staked: u64,
-    pub tokens: u64,
-}
+pub struct Account {}
 
 /// TODO: Implement the `AccountTrait` for the `Account` struct.
-impl AccountTrait for Account {
-    fn new(address: &str) -> Self {
-        Self {
-            address: address.to_string(),
-            staked: 0,
-            tokens: 20,
-        }
-    }
-    fn can_buy_rack(&self) -> bool {
-        self.tokens - self.staked >= 10
-    }
-    fn can_stake(&self) -> bool {
-        self.tokens > self.staked
-    }
-    fn can_unstake(&self) -> bool {
-        self.staked > 0
-    }
-    fn can_transfer(&self, amount: &u64) -> bool {
-        self.tokens >= *amount
-    }
-    fn can_punish(&self) -> bool {
-        self.tokens > 0
-    }
-    fn weight_as_miner(&self) -> u64 {
-        self.staked
-    }
-    fn weight_as_validator(&self) -> u64 {
-        self.staked
-    }
-    fn validate_block(block: &Block, previous_block: &Block) -> bool {
-        if block.previous_hash != previous_block.hash {
-            println!("block with id: {} has wrong previous hash", block.id);
-            return false;
-        } else if !&block.hash.starts_with(DIFFICULTY_PREFIX) {
-            println!("block with id: {} has invalid difficulty", block.id);
-            return false;
-        } else if block.id != previous_block.id + 1 {
-            println!(
-                "block with id: {} is not the next block after the latest: {}",
-                block.id, previous_block.id
-            );
-            return false;
-        } else if hash_to_binary(&calculate_hash(
-            &block.data,
-            block.id,
-            &block.next_miner,
-            &block.next_validators,
-            block.nonce,
-            &block.previous_hash,
-            block.timestamp,
-        )) != block.hash
-        {
-            println!("block with id: {} has invalid hash", block.id);
-            return false;
-        }
-        true
-    }
-}
 
 /// The account trait defines the methods that an `Account` must implement.
 ///
