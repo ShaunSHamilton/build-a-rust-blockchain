@@ -1,10 +1,9 @@
 extern crate blockchain;
 
 use blockchain::{
+    account::Account,
     chain::{Chain, ChainTrait},
-    mine_block,
-    node::Node,
-    Events, NodeState, Transaction,
+    mine_block, Events, NodeState, Transaction,
 };
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
@@ -19,12 +18,12 @@ fn staking_increases_account_staked_by_1() {
 
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().staked,
+        chain.get_account_by_address("Camper").unwrap().staked,
         1,
         "Stake should increase by 1"
     );
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().tokens,
+        chain.get_account_by_address("Camper").unwrap().tokens,
         20,
         "Tokens should not change"
     );
@@ -43,12 +42,12 @@ fn staking_with_no_tokens_returns_error() {
     let (chain, errors) = mine(fix_node_state).expect("result to be chain");
 
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().staked,
+        chain.get_account_by_address("Camper").unwrap().staked,
         0,
         "Stake should not change, if the transaction fails"
     );
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().tokens,
+        chain.get_account_by_address("Camper").unwrap().tokens,
         0,
         "Tokens should not change"
     );
@@ -72,12 +71,12 @@ fn staking_when_staked_equals_tokens_returns_error() {
     let (chain, errors) = mine(fix_node_state).expect("result to be chain");
 
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().staked,
+        chain.get_account_by_address("Camper").unwrap().staked,
         19,
         "Stake should not change, if the transaction fails"
     );
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().tokens,
+        chain.get_account_by_address("Camper").unwrap().tokens,
         19,
         "Tokens should not change"
     );
@@ -94,12 +93,12 @@ fn unstaking_decreases_account_staked_by_1() {
     fix_node_state.transactions[0].event = Events::Unstake;
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().staked,
+        chain.get_account_by_address("Camper").unwrap().staked,
         0,
         "Stake should decrease by 1"
     );
     assert_eq!(
-        chain.get_node_by_address("Camper").unwrap().tokens,
+        chain.get_account_by_address("Camper").unwrap().tokens,
         20,
         "Tokens should not change"
     );
@@ -113,12 +112,12 @@ fn add_account_adds_account() {
     fix_node_state.transactions[0].address = ahmad.clone();
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
     assert_eq!(
-        chain.get_nodes().len(),
+        chain.get_accounts().len(),
         3,
         "One more account should be added"
     );
     assert!(
-        chain.get_node_by_address(&ahmad).is_some(),
+        chain.get_account_by_address(&ahmad).is_some(),
         "New account should have correct address"
     );
 }
@@ -159,7 +158,7 @@ fn all_invalid_stake() {
 }
 
 #[wasm_bindgen_test]
-fn all_invalid_find_node() {
+fn all_invalid_find_account() {
     let mut fix_node_state = fix(None);
     fix_node_state.transactions[0].event = Events::Stake;
     fix_node_state.transactions[0].address = "Test".to_string();
@@ -187,7 +186,7 @@ fn stake_multiple_tokens() {
         event: Events::Stake,
     });
     let (chain, _) = mine(fix_node_state).expect("result to be chain");
-    assert_eq!(chain.get_node_by_address("Camper").unwrap().staked, 2);
+    assert_eq!(chain.get_account_by_address("Camper").unwrap().staked, 2);
 }
 
 #[wasm_bindgen_test]
@@ -203,11 +202,11 @@ fn one_invalid_transaction() {
     });
     let (chain, errors) = mine(fix_node_state).expect("result to be chain");
 
-    assert_eq!(chain.get_node_by_address("Camper").unwrap().staked, 1);
+    assert_eq!(chain.get_account_by_address("Camper").unwrap().staked, 1);
     assert_eq!(errors[0], "'Ahmad' not found in chain");
 }
 
-fn fix(data: Option<Node>) -> NodeState {
+fn fix(data: Option<Account>) -> NodeState {
     if let Some(data) = data {
         let node_vec_str = serde_json::to_string(&data).unwrap();
         let fix_node_state = format!(

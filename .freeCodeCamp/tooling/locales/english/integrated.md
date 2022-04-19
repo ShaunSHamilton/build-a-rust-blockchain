@@ -12,6 +12,11 @@ This project comes with a boilerplate including the following:
 - `/client` - the directory containing the code for the clientside code
 - `/node` - the directory containing the server-side code managing a node in the network
 
+**Commands**
+
+- Run all unit tests: `cargo test --lib`
+- Run all integration tests: `wasm-pack test --chrome` or `wasm-pack test --firefox --headless`
+
 **Useful Resources**
 
 - [Rust Course](https://www.freecodecamp.org/news/rust-in-replit/)
@@ -37,6 +42,8 @@ type Block = {
   next_validators: Account['address'][],
 }
 
+type Chain = Block[];
+
 enum Event = {
   AddAccount = "AddAccount",
   Punish = "Punish",
@@ -50,7 +57,7 @@ type Transfer = {
 }
 
 type NodeState = {
-  chain: Block[];
+  chain: Chain;
   network: Account['address'][];
   transaction_pool: Transaction[];
 }

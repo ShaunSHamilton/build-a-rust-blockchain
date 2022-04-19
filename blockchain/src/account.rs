@@ -1,4 +1,4 @@
-//! # Node
+//! # Account
 //!
 //! A node is a piece of data that is stored in a `BLock` on the blockchain.
 
@@ -7,19 +7,19 @@ use serde::{Deserialize, Serialize};
 use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Node {
+pub struct Account {
     pub address: String,
     pub staked: u64,
     pub tokens: u64,
 }
 
-impl Node {
-    /// Creates a new Node with the given name.
+impl Account {
+    /// Creates a new Account with the given name.
     ///
     /// # Examples
     ///
     /// ```
-    /// let node = Node::new();
+    /// let node = Account::new();
     /// assert_eq!(node.address, "Camper");
     /// ```
     pub fn new(address: String) -> Self {
@@ -30,30 +30,30 @@ impl Node {
         }
     }
 
-    /// Check if Node can afford a server rack
+    /// Check if Account can afford a server rack
     pub fn can_buy_rack(&self) -> bool {
         self.tokens - self.staked >= 10
     }
-    /// Check if a Node can stake, by checking if it has any unstaked tokens
+    /// Check if a Account can stake, by checking if it has any unstaked tokens
     pub fn can_stake(&self) -> bool {
         self.tokens > self.staked
     }
-    /// Check if a Node can unstake, by checking if it has any staked tokens
+    /// Check if a Account can unstake, by checking if it has any staked tokens
     pub fn can_unstake(&self) -> bool {
         self.staked > 0
     }
     pub fn can_transfer(&self, amount: &u64) -> bool {
         self.tokens >= *amount
     }
-    /// Check if a Node can be punished, by checking if it has any tokens and reputation
+    /// Check if a Account can be punished, by checking if it has any tokens and reputation
     pub fn can_punish(&self) -> bool {
         self.tokens > 0
     }
-    /// Calculates the miner weight of Node
+    /// Calculates the miner weight of Account
     pub fn weight_as_miner(&self) -> u64 {
         self.staked
     }
-    /// Calculates the validator weight of Node
+    /// Calculates the validator weight of Account
     pub fn weight_as_validator(&self) -> u64 {
         self.staked
     }
@@ -95,8 +95,8 @@ mod tests {
     #[test]
     fn new_always_creates_same_node() {
         let address = "example".to_string();
-        let node1 = Node::new(address.clone());
-        let node2 = Node::new(address);
+        let node1 = Account::new(address.clone());
+        let node2 = Account::new(address);
         assert_eq!(node1.address, node2.address);
         assert_eq!(node1.staked, node2.staked);
         assert_eq!(node1.tokens, node2.tokens);
@@ -181,49 +181,49 @@ mod tests {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
         block.previous_hash = block.previous_hash.replace("1", "0");
-        assert!(!Node::validate_block(&block, &previous_block));
+        assert!(!Account::validate_block(&block, &previous_block));
     }
     #[test]
     fn invalidate_block_hash_not_start_with_difficulty() {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
         block.hash = block.previous_hash.replace("0", "1"); //"011111101111000110011110001110011001111011011010011011000101110010100101001001111001110001011010111000010011000010000100101000011010111110001110010011110101011000011101011110011001110010111001011011011111111010110100000".to_string();
-        assert!(!Node::validate_block(&block, &previous_block));
+        assert!(!Account::validate_block(&block, &previous_block));
     }
     #[test]
     fn invalidate_block_id_not_incremented() {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
         block.id = previous_block.id;
-        assert!(!Node::validate_block(&block, &previous_block));
+        assert!(!Account::validate_block(&block, &previous_block));
     }
     #[test]
     fn invalidate_encoded_hash_not_correct() {
         let previous_block = _fixture_blocks().0;
         let mut block = _fixture_blocks().1;
         block.hash = "001111101111000110011110001110011001111011011010011011000101110010100101001001111001110001011010111000010011000010000100101000011010111110001110010011110101011000011101011110011001110010111001011011011111111010110100000".to_string();
-        assert!(!Node::validate_block(&block, &previous_block));
+        assert!(!Account::validate_block(&block, &previous_block));
     }
     #[test]
     fn validate_block_correct() {
         let previous_block = _fixture_blocks().0;
         let block = _fixture_blocks().1;
 
-        assert!(Node::validate_block(&block, &previous_block));
+        assert!(Account::validate_block(&block, &previous_block));
     }
 
-    fn _fixture_nodes() -> (Node, Node, Node) {
-        let all_staked = Node {
+    fn _fixture_nodes() -> (Account, Account, Account) {
+        let all_staked = Account {
             address: "Shaun".to_string(),
             staked: 100,
             tokens: 100,
         };
-        let all_unstaked = Node {
+        let all_unstaked = Account {
             address: "Tom".to_string(),
             staked: 0,
             tokens: 100,
         };
-        let no_tokens = Node {
+        let no_tokens = Account {
             address: "Quincy".to_string(),
             staked: 0,
             tokens: 0,
@@ -234,17 +234,17 @@ mod tests {
         let id = 0;
         let previous_hash = String::new();
         let data = vec![
-            Node {
+            Account {
                 address: "Camper".to_string(),
                 staked: 0,
                 tokens: 10,
             },
-            Node {
+            Account {
                 address: "Tom".to_string(),
                 staked: 0,
                 tokens: 10,
             },
-            Node {
+            Account {
                 address: "Mrugesh".to_string(),
                 staked: 0,
                 tokens: 10,
@@ -281,15 +281,15 @@ mod tests {
         // ----------------------------
         let id = 1;
         let previous_hash = hash;
-        let timestamp = 1648996144;
-        let data = vec![Node {
+        let timestamp = 1650301013;
+        let data = vec![Account {
             address: "Ahmad".to_string(),
             staked: 0,
             tokens: 10,
         }];
-        let nonce = 306;
+        let nonce = 172;
         let next_miner = "Mrugesh".to_string();
-        let next_validators = vec!["Mrugesh".to_string(), "Mrugesh".to_string()];
+        let next_validators = vec!["Mrugesh".to_string()];
         let hash = hash_to_binary(&calculate_hash(
             &data,
             id,
@@ -299,6 +299,14 @@ mod tests {
             &previous_hash,
             timestamp,
         ));
+
+        // Used to update test
+        // use crate::{Chain, ChainTrait};
+        // let mut chain = Chain::new();
+        // chain.push(genesis.clone());
+        // chain.mine_block(data.clone(), next_validators.clone());
+        // println!("{:?}", chain);
+
         let block = Block {
             id,
             hash,

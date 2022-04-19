@@ -2,13 +2,13 @@
 //!
 //! `blockchain` is a WASM module for handling a Proof of Stake blockchain.
 
+pub mod account;
 pub mod block;
 pub mod chain;
-pub mod node;
 
-use block::Block;
+// use block::Block;
+use account::Account;
 use chain::Chain;
-use node::Node;
 
 use crate::chain::ChainTrait;
 
@@ -37,7 +37,7 @@ pub struct Transaction {
     pub event: Events,
 }
 
-/// The current state of the Node calling the API.
+/// The current state of the Account calling the API.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NodeState {
     pub chain: Chain,
@@ -70,9 +70,9 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
     let mut chain = node_state.chain;
     let mut errors: Vec<String> = vec![];
 
-    let mut unique_nodes_before: Vec<Node> = vec![];
+    let mut unique_nodes_before: Vec<Account> = vec![];
     for transaction in node_state.transactions.iter() {
-        if let Some(node) = chain.get_node_by_address(&transaction.address) {
+        if let Some(node) = chain.get_account_by_address(&transaction.address) {
             if !unique_nodes_before
                 .iter()
                 .any(|n| n.address == node.address)
@@ -118,7 +118,7 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
                                 recipient.tokens += amount;
                                 node.tokens -= amount;
                             } else {
-                                if let Some(recipient) = chain.get_node_by_address(&to) {
+                                if let Some(recipient) = chain.get_account_by_address(&to) {
                                     let mut to_node = recipient.clone();
                                     to_node.tokens += amount;
                                     unique_nodes_final.push(to_node);
@@ -146,7 +146,7 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
             match transaction.event {
                 Events::AddAccount => {
                     // Add node to chain
-                    unique_nodes_final.push(Node::new(transaction.address.clone()));
+                    unique_nodes_final.push(Account::new(transaction.address.clone()));
                 }
                 _ => {
                     errors.push(format!("'{}' not found in chain", transaction.address));
@@ -214,7 +214,7 @@ pub fn validate_block(chain: JsValue) -> Result<bool, JsError> {
     }
     if let Some(previous_block) = chain.get(chain.len() - 2) {
         if let Some(last_block) = chain.get_last_block() {
-            Ok(Node::validate_block(&last_block, previous_block))
+            Ok(Account::validate_block(&last_block, previous_block))
         } else {
             Err(JsError::new("Unable to get latest block from chain"))
         }
@@ -224,13 +224,13 @@ pub fn validate_block(chain: JsValue) -> Result<bool, JsError> {
 }
 
 /// Initialise a new blockchain, and returns the corresponding chain.
-/// This is only to be called by the first Node starting the network.
+/// This is only to be called by the first Account starting the network.
 #[wasm_bindgen]
 pub fn initialise(address: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
 
     // Create and mine genesis block
-    let genesis_node = Node::new(address);
+    let genesis_node = Account::new(address);
     let genesis_address = genesis_node.address.clone();
     let data = vec![genesis_node];
     let network = vec![genesis_address];
@@ -250,7 +250,7 @@ pub fn hash_to_binary(hash: &[u8]) -> String {
 
 /// Uses `Sha256` to calculate the hash from a `serde_json::Value` of the input arguments.
 pub fn calculate_hash(
-    data: &Vec<Node>,
+    data: &Vec<Account>,
     id: u64,
     next_miner: &String,
     next_validators: &Vec<String>,
@@ -281,7 +281,7 @@ mod tests {
     }
     #[test]
     fn calculate_hash_works() {
-        let data = vec![Node::new(generate_new_address())];
+        let data = vec![Account::new(generate_new_address())];
         let hash = calculate_hash(
             &data,
             1,

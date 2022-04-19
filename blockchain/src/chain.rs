@@ -1,11 +1,10 @@
 //! # Chain
 //!
-//! A chain represents the main data of the blockchain, and is passed in full between Nodes.
+//! A chain represents the main data of the blockchain, and is passed in full between Accounts.
 
 use rand::Rng;
-// use serde::{Deserialize, Serialize};
 
-use crate::{block::Block, calculate_hash, hash_to_binary, node::Node, DIFFICULTY_PREFIX};
+use crate::{account::Account, block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
 
 /// The chain consists of the immutable `chain` data.
 pub type Chain = Vec<Block>;
@@ -21,7 +20,7 @@ impl ChainTrait for Chain {
         }
     }
     fn get_next_miner(&self) -> String {
-        let mut nodes: Vec<&Node> = self.get_nodes();
+        let mut nodes: Vec<&Account> = self.get_accounts();
 
         nodes.sort_by(|a, b| a.weight_as_miner().cmp(&b.weight_as_miner()));
         let cumulative_weight = nodes
@@ -49,12 +48,12 @@ impl ChainTrait for Chain {
     }
     fn get_next_validators(&self, next_miner: &String, network: Vec<String>) -> Vec<String> {
         let num_of_nodes = network.len();
-        let next_miner_staked = match self.get_node_by_address(next_miner) {
+        let next_miner_staked = match self.get_account_by_address(next_miner) {
             Some(node) => node.staked,
             None => 0,
         };
 
-        let mut nodes = self.get_nodes();
+        let mut nodes = self.get_accounts();
 
         let mut max_staked = 0;
         for node in nodes.iter() {
@@ -81,10 +80,6 @@ impl ChainTrait for Chain {
             .map(|node| node.weight_as_validator() as f64 / cumulative_weight as f64)
             .collect::<Vec<f64>>();
 
-        println!(
-            "Cumulative Weight: {:?}\nCumulative Weights: {:?}\n\n",
-            cumulative_weight, cumulative_weights
-        );
         let mut next_validators = vec![];
         for _ in 0..num_needed_validators {
             let rand_num = rand::thread_rng().gen::<f64>();
@@ -103,7 +98,7 @@ impl ChainTrait for Chain {
         }
         next_validators
     }
-    fn get_node_by_address(&self, address: &str) -> Option<&Node> {
+    fn get_account_by_address(&self, address: &str) -> Option<&Account> {
         // Search Chain data in reverse
         for block in self.iter().rev() {
             for node in block.data.iter() {
@@ -114,20 +109,19 @@ impl ChainTrait for Chain {
         }
         None
     }
-    fn get_nodes(&self) -> Vec<&Node> {
+    fn get_accounts(&self) -> Vec<&Account> {
         let mut nodes = vec![];
         for block in self.iter().rev() {
             for node in block.data.iter() {
                 // If node.name is not in nodes, add it
-                if !nodes.iter().any(|n: &&Node| n.address == node.address) {
+                if !nodes.iter().any(|n: &&Account| n.address == node.address) {
                     nodes.push(node);
                 }
             }
         }
         nodes
     }
-    fn mine_block(&mut self, data: Vec<Node>, network: Vec<String>) {
-        println!("\nMining Block...");
+    fn mine_block(&mut self, data: Vec<Account>, network: Vec<String>) {
         let mut nonce = 0;
 
         let id = self.len() as u64;
@@ -172,6 +166,9 @@ impl ChainTrait for Chain {
     }
 }
 
+/// The chain trait is defines the methods that a `Chain` must implement.
+///
+/// **Note:** Do not change this trait definition.
 pub trait ChainTrait {
     /// Creates a `Chain` with empty `chain` and `network` data.
     fn new() -> Self;
@@ -186,7 +183,7 @@ pub trait ChainTrait {
     /// assert!(last_block.is_none());
     /// ```
     ///
-    /// If chain is initialised by Node:
+    /// If chain is initialised by Account:
     ///
     /// ```javascript
     /// const chain = initialise("node_1");
@@ -198,9 +195,9 @@ pub trait ChainTrait {
     /// ```
     fn get_last_block(&self) -> Option<Block>;
 
-    /// Applies weighted, random selection to all `Node`s in the `Chain` to determine the `next_miner` for the next block.
+    /// Applies weighted, random selection to all `Account`s in the `Chain` to determine the `next_miner` for the next block.
     ///
-    /// **Note:** Defaults to returning `"Camper"`, if no `Node`s are present in the `Chain`.
+    /// **Note:** Defaults to returning `"Camper"`, if no `Account`s are present in the `Chain`.
     ///
     /// # Examples
     ///
@@ -211,10 +208,10 @@ pub trait ChainTrait {
     /// ```
     fn get_next_miner(&self) -> String;
 
-    /// Applies weighted, random selection to all `Node`s in the `Chain` to determine the `next_validators` for the next block.
+    /// Applies weighted, random selection to all `Account`s in the `Chain` to determine the `next_validators` for the next block.
     fn get_next_validators(&self, next_miner: &String, network: Vec<String>) -> Vec<String>;
 
-    /// Returns the `Node` with the given `name` if it exists in the `Chain`. Otherwise, returns `None`.
+    /// Returns the `Account` with the given `name` if it exists in the `Chain`. Otherwise, returns `None`.
     ///
     /// # Examples
     ///
@@ -222,18 +219,46 @@ pub trait ChainTrait {
     /// let mut chain = Chain::new();
     /// assert!(chain.get_node_by_name("Camper").is_none());
     /// ```
-    fn get_node_by_address(&self, name: &str) -> Option<&Node>;
+    fn get_account_by_address(&self, name: &str) -> Option<&Account>;
 
-    /// Returns a `Vec` of all `Node`s in the `Chain`.
-    fn get_nodes(&self) -> Vec<&Node>;
+    /// Returns a `Vec` of all `Account`s in the `Chain`.
+    fn get_accounts(&self) -> Vec<&Account>;
 
     /// Mines the given `data` into a new `Block` on the `Chain`.
-    fn mine_block(&mut self, data: Vec<Node>, network: Vec<String>);
+    fn mine_block(&mut self, data: Vec<Account>, network: Vec<String>);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn chain_is_vec_of_block() {
+        // This test must just compile.
+        let block = Block {
+            id: 0,
+            hash: "".to_string(),
+            previous_hash: "".to_string(),
+            timestamp: 0,
+            data: vec![],
+            nonce: 0,
+            next_miner: "".to_string(),
+            next_validators: vec![],
+        };
+        let _chain: Chain = vec![block];
+    }
+
+    #[test]
+    fn chain_implements_chain_trait() {
+        // This test must just compile.
+        let chain: Chain = Chain::new();
+        let _last_block = chain.get_last_block();
+        let next_miner = chain.get_next_miner();
+        let _next_validators = chain.get_next_validators(&next_miner, vec![]);
+        let _node = chain.get_account_by_address("");
+        let _nodes = chain.get_accounts();
+        type FuncTest = fn(&mut Chain, Vec<Account>, Vec<String>) -> ();
+        let _func_test: FuncTest = Chain::mine_block;
+    }
     #[test]
     fn new_chain_returns_empty_vec() {
         let chain: Chain = Chain::new();
@@ -291,42 +316,42 @@ mod tests {
         assert!(a);
     }
     #[test]
-    fn get_node_by_address_returns_none_when_node_is_not_in_chain() {
+    fn get_account_by_address_returns_none_when_node_is_not_in_chain() {
         let chain = _fixture_chain();
-        assert!(chain.get_node_by_address("node_not_in_chain").is_none());
+        assert!(chain.get_account_by_address("node_not_in_chain").is_none());
     }
     #[test]
-    fn get_node_by_address_returns_node_when_node_is_in_chain() {
+    fn get_account_by_address_returns_node_when_node_is_in_chain() {
         let chain = _fixture_chain();
-        assert!(chain.get_node_by_address("Camper").is_some());
+        assert!(chain.get_account_by_address("Camper").is_some());
     }
     #[test]
-    fn get_nodes_returns_all_nodes_in_chain() {
+    fn get_accounts_returns_all_nodes_in_chain() {
         let chain = _fixture_chain();
-        let nodes = chain.get_nodes();
+        let nodes = chain.get_accounts();
         assert_eq!(nodes.len(), 4);
     }
     #[test]
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
         let network = vec![String::from("node_1"), String::from("node_2")];
-        chain.mine_block(vec![Node::new("node_3".to_string())], network);
+        chain.mine_block(vec![Account::new("node_3".to_string())], network);
         assert_eq!(chain.len(), 3);
     }
 
     fn _fixture_chain() -> Chain {
         let mut chain = Chain::new();
 
-        let mut camper = Node::new("Camper".to_string());
+        let mut camper = Account::new("Camper".to_string());
         camper.tokens = 10;
         camper.staked = 5;
-        let mut tom = Node::new("Tom".to_string());
+        let mut tom = Account::new("Tom".to_string());
         tom.tokens = 20;
         tom.staked = 10;
-        let mut mrugesh = Node::new("Mrugesh".to_string());
+        let mut mrugesh = Account::new("Mrugesh".to_string());
         mrugesh.tokens = 100;
         mrugesh.staked = 80;
-        let mut ahmad = Node::new("Ahmad".to_string());
+        let mut ahmad = Account::new("Ahmad".to_string());
         ahmad.tokens = 30;
         ahmad.staked = 22;
 
