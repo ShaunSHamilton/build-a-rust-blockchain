@@ -24,6 +24,7 @@ pub struct Block {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::account::{Account, AccountTrait};
     #[test]
     fn block_has_correct_fields() {
         // This test must just compile.
@@ -46,7 +47,7 @@ mod tests {
             hash: "example".to_string(),
             previous_hash: "example".to_string(),
             timestamp: 0u64,
-            data: vec![Account::new("example".to_string())],
+            data: vec![Account::new("example")],
             nonce: 0u64,
             next_miner: "Example".to_string(),
             next_validators: vec![String::from("Example")],

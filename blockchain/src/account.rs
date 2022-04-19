@@ -13,53 +13,36 @@ pub struct Account {
     pub tokens: u64,
 }
 
-impl Account {
-    /// Creates a new Account with the given name.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let node = Account::new();
-    /// assert_eq!(node.address, "Camper");
-    /// ```
-    pub fn new(address: String) -> Self {
+impl AccountTrait for Account {
+    fn new(address: &str) -> Self {
         Self {
-            address,
+            address: address.to_string(),
             staked: 0,
             tokens: 20,
         }
     }
-
-    /// Check if Account can afford a server rack
-    pub fn can_buy_rack(&self) -> bool {
+    fn can_buy_rack(&self) -> bool {
         self.tokens - self.staked >= 10
     }
-    /// Check if a Account can stake, by checking if it has any unstaked tokens
-    pub fn can_stake(&self) -> bool {
+    fn can_stake(&self) -> bool {
         self.tokens > self.staked
     }
-    /// Check if a Account can unstake, by checking if it has any staked tokens
-    pub fn can_unstake(&self) -> bool {
+    fn can_unstake(&self) -> bool {
         self.staked > 0
     }
-    pub fn can_transfer(&self, amount: &u64) -> bool {
+    fn can_transfer(&self, amount: &u64) -> bool {
         self.tokens >= *amount
     }
-    /// Check if a Account can be punished, by checking if it has any tokens and reputation
-    pub fn can_punish(&self) -> bool {
+    fn can_punish(&self) -> bool {
         self.tokens > 0
     }
-    /// Calculates the miner weight of Account
-    pub fn weight_as_miner(&self) -> u64 {
+    fn weight_as_miner(&self) -> u64 {
         self.staked
     }
-    /// Calculates the validator weight of Account
-    pub fn weight_as_validator(&self) -> u64 {
+    fn weight_as_validator(&self) -> u64 {
         self.staked
     }
-
-    /// Validates if two adjacent blocks have been correctly mined
-    pub fn validate_block(block: &Block, previous_block: &Block) -> bool {
+    fn validate_block(block: &Block, previous_block: &Block) -> bool {
         if block.previous_hash != previous_block.hash {
             println!("block with id: {} has wrong previous hash", block.id);
             return false;
@@ -89,92 +72,244 @@ impl Account {
     }
 }
 
+pub trait AccountTrait {
+    /// Creates a new Account with the given name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let node = Account::new();
+    /// assert_eq!(node.address, "Camper");
+    /// ```
+    fn new(address: &str) -> Self;
+    /// Check if Account can afford a server rack
+    ///
+    /// **Note:** Racks cost 10 tokens.
+    fn can_buy_rack(&self) -> bool;
+    /// Check if a Account can stake, by checking if it has any unstaked tokens
+    fn can_stake(&self) -> bool;
+    /// Check if a Account can unstake, by checking if it has any staked tokens
+    fn can_unstake(&self) -> bool;
+    /// Check if a Account can transfer tokens, by checking if it has enough tokens
+    fn can_transfer(&self, amount: &u64) -> bool;
+    /// Check if a Account can be punished, by checking if it has any tokens
+    fn can_punish(&self) -> bool;
+    /// Calculates the miner weight of Account
+    ///
+    /// **Note:** Weight is equal to the number of staked tokens.
+    fn weight_as_miner(&self) -> u64;
+    /// Calculates the validator weight of Account
+    ///
+    /// **Note:** Weight is equal to the number of staked tokens.
+    fn weight_as_validator(&self) -> u64;
+    /// Validates if two adjacent blocks have been correctly mined
+    fn validate_block(block: &Block, previous_block: &Block) -> bool;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn new_always_creates_same_node() {
+    fn account_has_correct_fields() {
+        // This test must just compile.
+        let _account = Account {
+            address: "example".to_string(),
+            staked: 0u64,
+            tokens: 20u64,
+        };
+    }
+    #[test]
+    fn account_implements_account_trait() {
+        // This test must just compile.
+        let account = Account::new("example");
+        let _can_buy_rack: bool = account.can_buy_rack();
+        let _can_stake: bool = account.can_stake();
+        let _can_unstake: bool = account.can_unstake();
+        let _can_transfer: bool = account.can_transfer(&10u64);
+        let _can_punish: bool = account.can_punish();
+        let _weight_as_miner: u64 = account.weight_as_miner();
+        let _weight_as_validator: u64 = account.weight_as_validator();
+        type FuncTest = fn(&Block, &Block) -> bool;
+        let _validate_block_test: FuncTest = Account::validate_block;
+    }
+    #[test]
+    fn new_always_creates_same_account() {
         let address = "example".to_string();
-        let node1 = Account::new(address.clone());
-        let node2 = Account::new(address);
+        let node1 = Account::new(&address);
+        let node2 = Account::new(&address);
         assert_eq!(node1.address, node2.address);
         assert_eq!(node1.staked, node2.staked);
         assert_eq!(node1.tokens, node2.tokens);
     }
     #[test]
-    fn cannot_buy_rack_when_all_staked() {
-        let node = _fixture_nodes().0;
-        assert!(!node.can_buy_rack());
+    fn new_account_tests() {
+        let address = "example".to_string();
+        let node = Account::new(&address);
+        let second_addr = "example2".to_string();
+        let second_node = Account::new(&second_addr);
+        assert_eq!(
+            node.address, address,
+            "The given address should be used to create a new account"
+        );
+        assert_eq!(
+            second_node.address, second_addr,
+            "The given address should be used to create a new account"
+        );
+        assert_eq!(
+            node.staked, 0,
+            "A new account should start with 0 staked tokens"
+        );
+        assert_eq!(node.tokens, 20, "A new account should start with 20 tokens");
     }
     #[test]
-    fn can_buy_rack_when_all_unstaked() {
-        let node = _fixture_nodes().1;
-        assert!(node.can_buy_rack());
+    fn can_buy_rack_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 10;
+        assert!(
+            account.can_buy_rack(),
+            "An account with 10 tokens should be able to buy a rack"
+        );
+        account.tokens = 9;
+        assert!(
+            !account.can_buy_rack(),
+            "An account with 9 tokens should not be able to buy a rack"
+        );
+        account.tokens = 19;
+        account.staked = 10;
+        assert!(
+            !account.can_buy_rack(),
+            "An account with 19 tokens and 10 staked tokens should not be able to buy a rack"
+        );
+        account.tokens = 20;
+        account.staked = 10;
+        assert!(
+            account.can_buy_rack(),
+            "An account with 20 tokens and 10 staked tokens should be able to buy a rack"
+        );
     }
     #[test]
-    fn cannot_buy_rack_when_no_tokens() {
-        let node = _fixture_nodes().2;
-        assert!(!node.can_buy_rack());
+    fn can_stake_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 1;
+        assert!(
+            account.can_stake(),
+            "An account with 1 token should be able to stake"
+        );
+        account.tokens = 0;
+        assert!(
+            !account.can_stake(),
+            "An account with 0 tokens should not be able to stake"
+        );
+        account.tokens = 11;
+        account.staked = 10;
+        assert!(
+            account.can_stake(),
+            "An account with 11 tokens and 10 staked tokens should be able to stake"
+        );
+        account.tokens = 10;
+        account.staked = 10;
+        assert!(
+            !account.can_stake(),
+            "An account with 10 tokens and 10 staked tokens should not be able to stake"
+        );
     }
     #[test]
-    fn cannot_stake_when_all_staked() {
-        let node = _fixture_nodes().0;
-        assert!(!node.can_stake());
+    fn can_unstake_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 1;
+        account.staked = 1;
+        assert!(
+            account.can_unstake(),
+            "An account with 1 token and 1 staked token should be able to unstake"
+        );
+        account.staked = 0;
+        assert!(
+            !account.can_unstake(),
+            "An account with 0 staked should not be able to unstake"
+        );
     }
     #[test]
-    fn can_stake_when_all_unstaked() {
-        let node = _fixture_nodes().1;
-        assert!(node.can_stake());
+    fn can_transfer_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 10;
+        assert!(
+            account.can_transfer(&10u64),
+            "An account with 10 tokens should be able to transfer 10 tokens"
+        );
+        assert!(
+            !account.can_transfer(&11u64),
+            "An account with 10 tokens should not be able to transfer 11 tokens"
+        );
+        account.tokens = 0;
+        assert!(
+            !account.can_transfer(&1u64),
+            "An account with 0 tokens should not be able to transfer 1 tokens"
+        );
     }
     #[test]
-    fn cannot_stake_when_no_tokens() {
-        let node = _fixture_nodes().2;
-        assert!(!node.can_stake());
+    fn can_punish_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 10;
+        assert!(
+            account.can_punish(),
+            "An account with 10 tokens should be able to be punished"
+        );
+        account.tokens = 1;
+        assert!(
+            account.can_punish(),
+            "An account with 1 token should be able to be punished"
+        );
+        account.tokens = 0;
+        assert!(
+            !account.can_punish(),
+            "An account with 0 tokens should not be able to be punished"
+        );
     }
     #[test]
-    fn can_unstake_when_all_staked() {
-        let node = _fixture_nodes().0;
-        assert!(node.can_unstake());
+    fn miner_weight_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 20;
+        account.staked = 10;
+        assert_eq!(
+            account.weight_as_miner(),
+            10,
+            "An account with 20 tokens and 10 staked should have a weight of 10"
+        );
+        account.tokens = 10;
+        assert_eq!(
+            account.weight_as_miner(),
+            10,
+            "An account with 10 tokens and 10 staked should have a weight of 10"
+        );
+        account.staked = 0;
+        assert_eq!(
+            account.weight_as_miner(),
+            0,
+            "An account with 20 tokens and 0 staked should have a weight of 0"
+        );
     }
     #[test]
-    fn cannot_unstake_when_all_unstaked() {
-        let node = _fixture_nodes().1;
-        assert!(!node.can_unstake());
-    }
-    #[test]
-    fn cannot_unstake_when_no_tokens() {
-        let node = _fixture_nodes().2;
-        assert!(!node.can_unstake());
-    }
-    #[test]
-    fn all_staked_miner_weight() {
-        let node = _fixture_nodes().0;
-        assert_eq!(node.weight_as_miner(), 100);
-    }
-    #[test]
-    fn all_unstaked_miner_weight() {
-        let node = _fixture_nodes().1;
-        assert_eq!(node.weight_as_miner(), 0);
-    }
-    #[test]
-    fn no_tokens_miner_weight() {
-        let node = _fixture_nodes().2;
-        assert_eq!(node.weight_as_miner(), 0);
-    }
-    #[test]
-    fn all_staked_validator_weight() {
-        let node = _fixture_nodes().0;
-        assert_eq!(node.weight_as_validator(), 100);
-    }
-    #[test]
-    fn all_unstaked_validator_weight() {
-        let node = _fixture_nodes().1;
-        assert_eq!(node.weight_as_validator(), 0);
-    }
-    #[test]
-    fn no_tokens_validator_weight() {
-        let node = _fixture_nodes().2;
-        assert_eq!(node.weight_as_validator(), 0);
+    fn validator_weight_tests() {
+        let mut account = Account::new("example");
+        account.tokens = 20;
+        account.staked = 10;
+        assert_eq!(
+            account.weight_as_validator(),
+            10,
+            "An account with 20 tokens and 10 staked should have a weight of 10"
+        );
+        account.tokens = 10;
+        assert_eq!(
+            account.weight_as_validator(),
+            10,
+            "An account with 10 tokens and 10 staked should have a weight of 10"
+        );
+        account.staked = 0;
+        assert_eq!(
+            account.weight_as_validator(),
+            0,
+            "An account with 20 tokens and 0 staked should have a weight of 0"
+        );
     }
     #[test]
     fn invalidate_block_unequal_previous_hash() {
@@ -212,7 +347,7 @@ mod tests {
         assert!(Account::validate_block(&block, &previous_block));
     }
 
-    fn _fixture_nodes() -> (Account, Account, Account) {
+    fn _fixture_accounts() -> (Account, Account, Account) {
         let all_staked = Account {
             address: "Shaun".to_string(),
             staked: 100,

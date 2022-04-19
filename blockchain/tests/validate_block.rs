@@ -1,7 +1,7 @@
 extern crate blockchain;
 
 use blockchain::{
-    account::Account,
+    account::{Account, AccountTrait},
     block::Block,
     chain::{Chain, ChainTrait},
     validate_block,
@@ -40,7 +40,7 @@ fn validate_block_on_empty_chain_returns_error() {
 #[wasm_bindgen_test]
 fn validate_block_on_valid_chain_returns_true() {
     let mut fix_chain = fix(None);
-    let data = vec![Account::new("Mrugesh".to_string())];
+    let data = vec![Account::new("Mrugesh")];
     let network = vec!["Tom".to_string(), "Camper".to_string()];
     fix_chain.mine_block(data, network);
     let chain_res = validate(fix_chain);

@@ -7,7 +7,7 @@ pub mod block;
 pub mod chain;
 
 // use block::Block;
-use account::Account;
+use account::{Account, AccountTrait};
 use chain::Chain;
 
 use crate::chain::ChainTrait;
@@ -146,7 +146,7 @@ pub fn mine_block(node_state: JsValue) -> Result<JsValue, JsError> {
             match transaction.event {
                 Events::AddAccount => {
                     // Add node to chain
-                    unique_nodes_final.push(Account::new(transaction.address.clone()));
+                    unique_nodes_final.push(Account::new(&transaction.address));
                 }
                 _ => {
                     errors.push(format!("'{}' not found in chain", transaction.address));
@@ -230,7 +230,7 @@ pub fn initialise(address: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
 
     // Create and mine genesis block
-    let genesis_node = Account::new(address);
+    let genesis_node = Account::new(&address);
     let genesis_address = genesis_node.address.clone();
     let data = vec![genesis_node];
     let network = vec![genesis_address];
@@ -281,7 +281,7 @@ mod tests {
     }
     #[test]
     fn calculate_hash_works() {
-        let data = vec![Account::new(generate_new_address())];
+        let data = vec![Account::new(&generate_new_address())];
         let hash = calculate_hash(
             &data,
             1,

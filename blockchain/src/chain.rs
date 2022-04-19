@@ -4,7 +4,11 @@
 
 use rand::Rng;
 
-use crate::{account::Account, block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
+use crate::{
+    account::{Account, AccountTrait},
+    block::Block,
+    calculate_hash, hash_to_binary, DIFFICULTY_PREFIX,
+};
 
 /// The chain consists of the immutable `chain` data.
 pub type Chain = Vec<Block>;
@@ -230,6 +234,8 @@ pub trait ChainTrait {
 
 #[cfg(test)]
 mod tests {
+    use crate::account::AccountTrait;
+
     use super::*;
     #[test]
     fn chain_is_vec_of_block() {
@@ -253,7 +259,7 @@ mod tests {
         let chain: Chain = Chain::new();
         let _last_block = chain.get_last_block();
         let next_miner = chain.get_next_miner();
-        let _next_validators = chain.get_next_validators(&next_miner, vec![]);
+        let _next_validators = chain.get_next_validators(&next_miner, vec!["Camper".to_string()]);
         let _node = chain.get_account_by_address("");
         let _nodes = chain.get_accounts();
         type FuncTest = fn(&mut Chain, Vec<Account>, Vec<String>) -> ();
@@ -335,23 +341,23 @@ mod tests {
     fn mine_block_does_not_panic() {
         let mut chain = _fixture_chain();
         let network = vec![String::from("node_1"), String::from("node_2")];
-        chain.mine_block(vec![Account::new("node_3".to_string())], network);
+        chain.mine_block(vec![Account::new("node_3")], network);
         assert_eq!(chain.len(), 3);
     }
 
     fn _fixture_chain() -> Chain {
         let mut chain = Chain::new();
 
-        let mut camper = Account::new("Camper".to_string());
+        let mut camper = Account::new("Camper");
         camper.tokens = 10;
         camper.staked = 5;
-        let mut tom = Account::new("Tom".to_string());
+        let mut tom = Account::new("Tom");
         tom.tokens = 20;
         tom.staked = 10;
-        let mut mrugesh = Account::new("Mrugesh".to_string());
+        let mut mrugesh = Account::new("Mrugesh");
         mrugesh.tokens = 100;
         mrugesh.staked = 80;
-        let mut ahmad = Account::new("Ahmad".to_string());
+        let mut ahmad = Account::new("Ahmad");
         ahmad.tokens = 30;
         ahmad.staked = 22;
 

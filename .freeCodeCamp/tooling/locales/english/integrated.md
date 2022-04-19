@@ -81,6 +81,16 @@ type Transaction = {
 
 ### --tests--
 
+Your `blockchain` library should pass all `account::tests` unit tests.
+
+```js
+const { stdout } = await __helpers.getCommandOutput(
+  "cargo test --lib account::tests",
+  "blockchain"
+);
+assert.match(stdout, /test result: ok/);
+```
+
 Your `blockchain` library should pass all `block::tests` unit tests.
 
 ```js
@@ -96,16 +106,6 @@ Your `blockchain` library should pass all `chain::tests` unit tests.
 ```js
 const { stdout } = await __helpers.getCommandOutput(
   "cargo test --lib chain::tests",
-  "blockchain"
-);
-assert.match(stdout, /test result: ok/);
-```
-
-Your `blockchain` library should pass all `node::tests` unit tests.
-
-```js
-const { stdout } = await __helpers.getCommandOutput(
-  "cargo test --lib node::tests",
   "blockchain"
 );
 assert.match(stdout, /test result: ok/);
