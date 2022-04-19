@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::Account;
 
+/// TODO: Complete the struct definition.
 /// The block added to the chain of the blockchain.
 ///
 /// **Note:** This is a reference type, and does not contain any implementations.
@@ -21,6 +22,7 @@ pub struct Block {
     pub next_validators: Vec<String>,
 }
 
+// DO NOT EDIT TESTS
 #[cfg(test)]
 mod tests {
     use super::*;

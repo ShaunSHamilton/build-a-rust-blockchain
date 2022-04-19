@@ -6,7 +6,6 @@ pub mod account;
 pub mod block;
 pub mod chain;
 
-// use block::Block;
 use account::{Account, AccountTrait};
 use chain::Chain;
 
@@ -16,9 +15,11 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use wasm_bindgen::prelude::*;
 
+/// TODO: Define the global difficulty prefix to be used in the mining process.
 /// Increasing the number of leading zeros in the hash of a block increases the difficulty of mining a block.
 pub static DIFFICULTY_PREFIX: &str = "0";
 
+/// TODO: Complete this enum definition. Be sure to derive the necessary implementations
 /// Events that can be emitted in the `event` field of a `Transaction`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Events {
@@ -30,6 +31,7 @@ pub enum Events {
     Unstake,
 }
 
+/// TODO: Complete this struct definition. Be sure to derive the necessary implementations
 /// A transaction describes the change which needs to be mined into a block. The transaction is associated with the `address` of an `Account`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
@@ -37,6 +39,7 @@ pub struct Transaction {
     pub event: Events,
 }
 
+/// TODO: Complete this struct definition. Be sure to derive the necessary implementations
 /// The current state of the Account calling the API.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NodeState {
@@ -44,6 +47,8 @@ pub struct NodeState {
     pub network: Vec<String>,
     pub transactions: Vec<Transaction>,
 }
+
+/// TODO: Define `mine_block`, `validate_block`, and `initialise_chain` functions here:
 
 /// Mines the next block onto the given chain passed in the `node_state` argument.
 ///
@@ -226,7 +231,7 @@ pub fn validate_block(chain: JsValue) -> Result<bool, JsError> {
 /// Initialise a new blockchain, and returns the corresponding chain.
 /// This is only to be called by the first Account starting the network.
 #[wasm_bindgen]
-pub fn initialise(address: String) -> Result<JsValue, JsError> {
+pub fn initialise_chain(address: String) -> Result<JsValue, JsError> {
     let mut chain: Chain = Chain::new();
 
     // Create and mine genesis block
@@ -239,6 +244,7 @@ pub fn initialise(address: String) -> Result<JsValue, JsError> {
     Ok(JsValue::from_serde(&chain)?)
 }
 
+/// TODO: Complete this function:
 /// Takes a hash slice, and returns the binary representation.
 pub fn hash_to_binary(hash: &[u8]) -> String {
     let mut res: String = String::default();
@@ -248,11 +254,12 @@ pub fn hash_to_binary(hash: &[u8]) -> String {
     res
 }
 
+/// TODO: Complete this function:
 /// Uses `Sha256` to calculate the hash from a `serde_json::Value` of the input arguments.
 pub fn calculate_hash(
     data: &Vec<Account>,
     id: u64,
-    next_miner: &String,
+    next_miner: &str,
     next_validators: &Vec<String>,
     nonce: u64,
     previous_hash: &str,
@@ -272,42 +279,55 @@ pub fn calculate_hash(
     hasher.finalize().as_slice().to_owned()
 }
 
+// DO NOT EDIT TESTS
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn difficulty_is_not_too_high() {
-        assert!(DIFFICULTY_PREFIX.len() <= 3);
-    }
-    #[test]
     fn calculate_hash_works() {
-        let data = vec![Account::new(&generate_new_address())];
+        let data = vec![Account::new("Shaun")];
+        let hash = calculate_hash(&data, 1, "test", &vec!["test".to_string()], 1, "test", 1);
+        let expected_hash = [
+            104, 101, 236, 24, 3, 47, 224, 77, 47, 52, 255, 237, 205, 181, 209, 162, 180, 139, 160,
+            115, 147, 254, 129, 29, 245, 49, 171, 8, 28, 29, 116, 198,
+        ];
+        assert_eq!(hash.len(), 32);
+        assert_eq!(hash, expected_hash);
+        let data = vec![Account::new("Tom")];
         let hash = calculate_hash(
             &data,
             1,
-            &"test".to_string(),
-            &vec!["test".to_string()],
+            "Mrugesh",
+            &vec!["Shaun".to_string()],
             1,
-            &"test".to_string(),
+            "Quincy",
             1,
         );
+        let expected_hash = [
+            5, 115, 102, 222, 65, 49, 98, 111, 42, 138, 233, 77, 213, 12, 96, 154, 168, 222, 27,
+            251, 144, 8, 233, 164, 50, 174, 141, 146, 8, 145, 8, 72,
+        ];
         assert_eq!(hash.len(), 32);
+        assert_eq!(hash, expected_hash);
     }
     #[test]
     fn hash_to_binary_works() {
-        let hash = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        let hash = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let hash_str = hash_to_binary(&hash);
+        assert_eq!(
+            hash_str,
+            "01101110010111011110001001101010111100110111101111"
+        );
         assert_eq!(hash_str.len(), 50);
-    }
-
-    fn generate_new_address() -> String {
-        use rand::Rng;
-
-        let mut rng = rand::thread_rng();
-        let mut address: String = String::default();
-        for _ in 0..10 {
-            address.push(rng.gen_range(b'a'..b'z') as char);
-        }
-        address
+        let hash = [
+            5, 115, 102, 222, 65, 49, 98, 111, 42, 138, 233, 77, 213, 12, 96, 154, 168, 222, 27,
+            251, 144, 8, 233, 164, 50, 174, 141, 146, 8, 145, 8, 72,
+        ];
+        let hash_str = hash_to_binary(&hash);
+        assert_eq!(
+            hash_str,
+            "10111100111100110110111101000001110001110001011011111010101000101011101001100110111010101110011000001001101010101000110111101101111111011100100001000111010011010010011001010101110100011011001001010001001000110001001000"
+        );
+        assert_eq!(hash_str.len(), 218);
     }
 }

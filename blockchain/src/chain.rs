@@ -10,9 +10,11 @@ use crate::{
     calculate_hash, hash_to_binary, DIFFICULTY_PREFIX,
 };
 
-/// The chain consists of the immutable `chain` data.
+/// TODO: Define the `Chain` type.
+/// The chain consists of the immutable `Block` data.
 pub type Chain = Vec<Block>;
 
+/// TODO: Implement the `ChainTrait` for the `Chain` type.
 impl ChainTrait for Chain {
     fn new() -> Self {
         vec![]
@@ -170,7 +172,7 @@ impl ChainTrait for Chain {
     }
 }
 
-/// The chain trait is defines the methods that a `Chain` must implement.
+/// The chain trait defines the methods that a `Chain` must implement.
 ///
 /// **Note:** Do not change this trait definition.
 pub trait ChainTrait {
@@ -232,6 +234,7 @@ pub trait ChainTrait {
     fn mine_block(&mut self, data: Vec<Account>, network: Vec<String>);
 }
 
+// DO NOT EDIT TESTS
 #[cfg(test)]
 mod tests {
     use crate::account::AccountTrait;
@@ -252,7 +255,6 @@ mod tests {
         };
         let _chain: Chain = vec![block];
     }
-
     #[test]
     fn chain_implements_chain_trait() {
         // This test must just compile.

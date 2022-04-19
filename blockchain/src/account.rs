@@ -1,11 +1,12 @@
 //! # Account
 //!
-//! A node is a piece of data that is stored in a `BLock` on the blockchain.
+//! An account is a piece of data that is stored in a `BLock` on the blockchain.
 
 use serde::{Deserialize, Serialize};
 
 use crate::{block::Block, calculate_hash, hash_to_binary, DIFFICULTY_PREFIX};
 
+/// TODO: Complete the struct definition. Be sure to derive the necessary implementations.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Account {
     pub address: String,
@@ -13,6 +14,7 @@ pub struct Account {
     pub tokens: u64,
 }
 
+/// TODO: Implement the `AccountTrait` for the `Account` struct.
 impl AccountTrait for Account {
     fn new(address: &str) -> Self {
         Self {
@@ -72,6 +74,9 @@ impl AccountTrait for Account {
     }
 }
 
+/// The account trait defines the methods that an `Account` must implement.
+///
+/// **Note:** Do not change this trait definition.
 pub trait AccountTrait {
     /// Creates a new Account with the given name.
     ///
@@ -106,6 +111,7 @@ pub trait AccountTrait {
     fn validate_block(block: &Block, previous_block: &Block) -> bool;
 }
 
+// DO NOT EDIT TESTS
 #[cfg(test)]
 mod tests {
     use super::*;
