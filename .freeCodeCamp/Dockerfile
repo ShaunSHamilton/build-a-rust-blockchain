@@ -1,7 +1,7 @@
 FROM ubuntu
 
 ARG USERNAME=camper
-ARG REPO_NAME=external-project
+ARG REPO_NAME=curriculum
 ARG HOMEDIR=/workspace/$REPO_NAME
 
 ENV TZ="America/New_York"

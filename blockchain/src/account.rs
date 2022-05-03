@@ -16,7 +16,7 @@ pub trait AccountTrait {
     /// # Examples
     ///
     /// ```
-    /// let node = Account::new();
+    /// let node = Account::new("Camper");
     /// assert_eq!(node.address, "Camper");
     /// ```
     fn new(address: &str) -> Self;
